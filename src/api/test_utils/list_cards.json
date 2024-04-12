@@ -1,0 +1,16 @@
+{
+    "cards": [
+        {
+            "name": "name",
+            "repository": "repository",
+            "date": "01/01/2023",
+            "contact": "devops@opsml.com",
+            "version": "1.0.0",
+            "uid": "1234567890",
+            "tags": {
+                "tag1": "value1",
+                "tag2": "value2"
+            }
+        }
+    ]
+}

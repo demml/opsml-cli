@@ -1,0 +1,11 @@
+{
+  "metric": [
+    {
+      "run_uid": "fake",
+      "name": "mae",
+      "value": 5,
+      "step": null,
+      "timestamp": null
+    }
+  ]
+}

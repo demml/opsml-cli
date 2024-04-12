@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "opsml-cli"
+version = "0.5.0"
+description = "Rust-based CLI for interacting with OpsML"
+readme = "README.md"
+authors = ["Steven Forrester <steven.forrester@shipt.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+
+[tool.poetry.group.dev.dependencies]
+maturin = "^1.4.0"
+
+[build-system]
+requires = ["maturin>=1.2,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+bindings = "bin"
+strip = true
+
+[project]
+name = "opsml-cli"
+authors = [{ name = 'Steven Forrester', email = 'steven.forrester@shipt.com' }]
+requires-python = ">=3.9,<3.13"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/shipt/opsml-cli"
+"Source Code" = "https://github.com/shipt/opsml-cli"
+"Issues" = "https://github.com/shipt/opsml-cli/issues"

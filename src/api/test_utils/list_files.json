@@ -1,0 +1,6 @@
+{
+    "files": [
+        "opsml-root:/OPSML_MODEL_REGISTRY/repo/model/v1.0.0/model.onnx",
+        "opsml-root:/OPSML_MODEL_REGISTRY/repo/model/v1.0.0/tokenizer.json"
+    ]
+}

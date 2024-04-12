@@ -1,0 +1,56 @@
+{
+    "model_name": "linear-reg-model",
+    "model_class": "SklearnEstimator",
+    "model_type": "LinearRegression",
+    "model_interface": "SklearnModel",
+    "onnx_uri": "models.json",
+    "onnx_version": "1.14.1",
+    "model_uri": "opsml-root:/",
+    "model_version": "1.1.0",
+    "model_repository": "devops-ml",
+    "sample_data_uri": "opsml-root:/",
+    "opsml_version": "2.0.0",
+    "data_schema": {
+        "data_type": "numpy.ndarray",
+        "input_features": {
+            "inputs": {
+                "feature_type": "float64",
+                "shape": [
+                    1,
+                    11
+                ]
+            }
+        },
+        "output_features": {
+            "outputs": {
+                "feature_type": "float64",
+                "shape": [
+                    1,
+                    1
+                ]
+            }
+        },
+        "onnx_input_features": {
+            "predict": {
+                "feature_type": "tensor(float)",
+                "shape": [
+                    null,
+                    11
+                ]
+            }
+        },
+        "onnx_output_features": {
+            "variable": {
+                "feature_type": "tensor(float)",
+                "shape": [
+                    null,
+                    1
+                ]
+            }
+        },
+        "onnx_data_type": null,
+        "onnx_version": "1.14.1"
+    },
+    "preprocessor_uri": "preprocessor.json",
+    "preprocessor_name": null
+}
