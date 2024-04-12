@@ -3,7 +3,7 @@ name = "opsml-cli"
 version = "0.5.0"
 description = "Rust-based CLI for interacting with OpsML"
 readme = "README.md"
-authors = ["Steven Forrester <steven.forrester@shipt.com>"]
+authors = ["Steven Forrester <sjforrester32@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
@@ -21,7 +21,7 @@ strip = true
 
 [project]
 name = "opsml-cli"
-authors = [{ name = 'Steven Forrester', email = 'steven.forrester@shipt.com' }]
+authors = [{ name = 'Steven Forrester', email = 'sjforrester32@gmail.com' }]
 requires-python = ">=3.9,<3.13"
 classifiers = [
     "Programming Language :: Rust",
@@ -30,6 +30,6 @@ classifiers = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/shipt/opsml-cli"
-"Source Code" = "https://github.com/shipt/opsml-cli"
-"Issues" = "https://github.com/shipt/opsml-cli/issues"
+"Homepage" = "https://github.com/demml/opsml-cli"
+"Source Code" = "https://github.com/demml/opsml-cli"
+"Issues" = "https://github.com/demml/opsml-cli/issues"

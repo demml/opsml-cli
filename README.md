@@ -50,7 +50,7 @@ If you'd like to contribute, be sure to check out our [contributing guide](./CON
 
 Thanks goes to these phenomenal [projects and people](./ATTRIBUTIONS.md) and people for creating a great foundation to build from!
 
-<a href="https://github.com/shipt/opsml-cli/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=shipt/opsml-cli" />
+<a href="https://github.com/demml/opsml-cli/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=demml/opsml-cli" />
 </a>
 
