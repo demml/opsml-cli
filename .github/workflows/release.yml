@@ -65,7 +65,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64, x86, aarch64, armv7, s390x, ppc64le]
+        target: [x86_64, x86, aarch64, armv7, ppc64le]
         manylinux: [auto]
 
     runs-on: ubuntu-latest
@@ -89,13 +89,18 @@ jobs:
           docker-options: -e CI
           before-script-linux:
             | # ref: https://github.com/sfackler/rust-openssl/issues/2036#issuecomment-1724324145
-            # If we're running on rhel centos, install needed packages.
-             if command -v yum &> /dev/null; then
-                 yum update -y && yum install -y perl-core pkgconfig
-             else
-                 # If we're running on debian-based system.
-                 sudo apt update -y && sudo apt-get install -y pkg-config
-             fi
+            if command -v yum &> /dev/null; then
+                yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
+
+                # If we're running on i686 we need to symlink libatomic
+                # in order to build openssl with -latomic flag.
+                if [[ ! -d "/usr/lib64" ]]; then
+                    ln -s /usr/lib/libatomic.so.1 /usr/lib/libatomic.so
+                fi
+            else
+                # If we're running on debian-based system.
+                sudo apt update -y && sudo apt-get install -y libssl-dev openssl pkg-config
+            fi
 
       - run: ls -lh dist/
 
@@ -136,13 +141,18 @@ jobs:
           docker-options: -e CI
           before-script-linux:
             | # ref: https://github.com/sfackler/rust-openssl/issues/2036#issuecomment-1724324145
-            # If we're running on rhel centos, install needed packages.
-             if command -v yum &> /dev/null; then
-                 yum update -y && yum install -y perl-core pkgconfig
-             else
-                 # If we're running on debian-based system.
-                 sudo apt update -y && sudo apt-get install -y pkg-config
-             fi
+            if command -v yum &> /dev/null; then
+                yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
+
+                # If we're running on i686 we need to symlink libatomic
+                # in order to build openssl with -latomic flag.
+                if [[ ! -d "/usr/lib64" ]]; then
+                    ln -s /usr/lib/libatomic.so.1 /usr/lib/libatomic.so
+                fi
+            else
+                # If we're running on debian-based system.
+                sudo apt update -y && sudo apt-get install -y libssl-dev openssl pkg-config
+            fi
 
       - run: ls -lh dist/
 
@@ -280,7 +290,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [aarch64, armv7, s390x, ppc64le]
+        target: [aarch64, armv7, ppc64le]
         distro: ["ubuntu22.04"]
         include:
           - target: aarch64
