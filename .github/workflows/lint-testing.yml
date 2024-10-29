@@ -113,6 +113,13 @@ jobs:
 
       - run: pip install -U twine
 
+      - name: Install dependencies for s390x
+        if: matrix.target == 's390x'
+        run: |
+          sudo apt update -y
+          sudo apt-get install -y gcc-multilib g++-multilib
+          sudo apt-get install -y libssl-dev openssl pkg-config
+
       - name: build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -126,17 +133,11 @@ jobs:
             # If we're running on rhel centos, install needed packages.
             if command -v yum &> /dev/null; then
                 yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
-
-                # If we're running on i686 we need to symlink libatomic
-                # in order to build openssl with -latomic flag.
                 if [[ ! -d "/usr/lib64" ]]; then
                     ln -s /usr/lib/libatomic.so.1 /usr/lib/libatomic.so
                 fi
             else
-                # If we're running on debian-based system.
                 sudo apt update -y && sudo apt-get install -y libssl-dev openssl pkg-config
-
-                # Additional dependencies for s390x architecture
                 if [[ "$(uname -m)" == "s390x" ]]; then
                     sudo apt-get install -y gcc-multilib g++-multilib
                 fi
