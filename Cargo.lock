@@ -892,7 +892,7 @@ dependencies = [
  "futures-util",
  "lazy_static",
  "mockito",
- "openssl",
+ "native-tls",
  "owo-colors",
  "reqwest",
  "serde",

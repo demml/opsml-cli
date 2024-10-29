@@ -65,13 +65,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64, x86, aarch64, armv7, s390x, ppc64le]
+        target: [x86_64, x86, aarch64, armv7, ppc64le]
         manylinux: [auto]
-        include:
-          - target: s390x
-            extra-build-args: --no-default-features --features native-tls-vendored,pyo3/extension-module
-          - target: ppc64le
-            extra-build-args: --no-default-features --features native-tls-vendored,pyo3/extension-module
 
     runs-on: ubuntu-latest
     steps:
@@ -86,17 +81,14 @@ jobs:
 
       - name: build wheels
         uses: PyO3/maturin-action@v1
-        env:
-          CFLAGS_s390x_unknown_linux_gnu: "-march=z10"
         with:
           target: ${{ matrix.target }}
           manylinux: ${{ matrix.manylinux }}
-          args: --release --out dist --interpreter ${{ env.INTERPRETER }} ${{ matrix.extra-build-args || '' }}
+          args: --release --out dist --interpreter ${{ env.INTERPRETER }}
           rust-toolchain: stable
           docker-options: -e CI
           before-script-linux:
             | # ref: https://github.com/sfackler/rust-openssl/issues/2036#issuecomment-1724324145
-            # If we're running on rhel centos, install needed packages.
             if command -v yum &> /dev/null; then
                 yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
 
@@ -108,11 +100,6 @@ jobs:
             else
                 # If we're running on debian-based system.
                 sudo apt update -y && sudo apt-get install -y libssl-dev openssl pkg-config
-
-                # Additional dependencies for s390x architecture
-                if [[ "$(uname -m)" == "s390x" ]]; then
-                    sudo apt-get install -y gcc-multilib g++-multilib
-                fi
             fi
 
       - run: ls -lh dist/
@@ -154,7 +141,6 @@ jobs:
           docker-options: -e CI
           before-script-linux:
             | # ref: https://github.com/sfackler/rust-openssl/issues/2036#issuecomment-1724324145
-            # If we're running on rhel centos, install needed packages.
             if command -v yum &> /dev/null; then
                 yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
 
@@ -304,7 +290,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [aarch64, armv7, s390x, ppc64le]
+        target: [aarch64, armv7, ppc64le]
         distro: ["ubuntu22.04"]
         include:
           - target: aarch64
