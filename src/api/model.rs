@@ -352,7 +352,9 @@ mod tests {
         // setup server
         let mut download_server = mockito::Server::new_async().await;
         let url = download_server.url();
-        env::set_var("OPSML_TRACKING_URI", url);
+        unsafe {
+            env::set_var("OPSML_TRACKING_URI", url);
+        }
 
         // get files
         let files = types::ListFileResponse {
