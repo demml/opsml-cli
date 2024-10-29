@@ -8,7 +8,9 @@ use futures_util::StreamExt;
 use owo_colors::OwoColorize;
 use reqwest::{self, Response};
 use serde::Serialize;
+use std::time::Duration;
 use std::{format, path::Path};
+use tokio::time::sleep;
 
 pub struct RouteHelper {}
 
@@ -25,15 +27,14 @@ impl RouteHelper {
         payload: &T,
     ) -> Result<Response, anyhow::Error> {
         let (client, parsed_url) = utils::create_client(url, None).await.unwrap();
-        let msg = client.post(parsed_url).json(payload).send();
+        let msg = client
+            .post(parsed_url)
+            .json(payload)
+            .send()
+            .await
+            .with_context(|| "failed to send post request")?;
 
-        match msg.await {
-            Ok(response) => Ok(response),
-            Err(e) => Err(anyhow::Error::msg(format!(
-                "Failed to make post request: {}",
-                e
-            ))),
-        }
+        Ok(msg)
     }
 
     /// async get request for metadata
@@ -48,15 +49,13 @@ impl RouteHelper {
     ) -> Result<Response, anyhow::Error> {
         let (client, parsed_url) = utils::create_client(url, params).await.unwrap();
 
-        let msg = client.get(parsed_url).send();
+        let msg = client
+            .get(parsed_url)
+            .send()
+            .await
+            .with_context(|| "Failed to send get request")?;
 
-        match msg.await {
-            Ok(response) => Ok(response),
-            Err(e) => Err(anyhow::Error::msg(format!(
-                "Failed to make get request: {}",
-                e
-            ))),
-        }
+        Ok(msg)
     }
 
     /// Lists files associated with a model
@@ -94,7 +93,12 @@ impl RouteHelper {
         filename: &Path,
     ) -> Result<(), anyhow::Error> {
         let mut response_stream = response.bytes_stream();
-        let mut file = tokio::fs::File::create(filename).await.unwrap();
+        let mut file = tokio::fs::File::create(filename).await.with_context(|| {
+            format!(
+                "failed to create file for {:?}",
+                filename.to_str().unwrap().red()
+            )
+        })?;
 
         while let Some(item) = response_stream.next().await {
             let chunk =
@@ -106,7 +110,7 @@ impl RouteHelper {
         Ok(())
     }
 
-    /// Downloads an artifact file
+    /// Downloads an artifact file. Retries up to 3 times if download fails.
     ///
     /// # Arguments
     ///
@@ -119,21 +123,38 @@ impl RouteHelper {
     ///
     pub async fn download_file(lpath: &Path, rpath: &str) -> Result<(), anyhow::Error> {
         let params = [("path", rpath)];
-        let response =
-            RouteHelper::make_get_request(&utils::OpsmlPaths::Download.as_str(), Some(&params))
-                .await?;
+        let mut attempts = 0;
+        let max_attempts = 3;
 
-        if response.status().is_success() {
-            RouteHelper::download_stream_to_file(response, lpath).await?;
-        } else {
-            let error_message = format!(
-                "Failed to download model: {}",
-                response.text().await.unwrap().red()
-            );
-            return Err(anyhow::anyhow!(error_message));
+        while attempts < max_attempts {
+            attempts += 1;
+            let response =
+                RouteHelper::make_get_request(&utils::OpsmlPaths::Download.as_str(), Some(&params))
+                    .await
+                    .with_context(|| "failed to download model")?;
+
+            if response.status().is_success() {
+                match RouteHelper::download_stream_to_file(response, lpath).await {
+                    Ok(_) => return Ok(()),
+                    Err(e) if attempts < max_attempts => {
+                        println!("Attempt {} failed: {}. Retrying...", attempts, e);
+                        sleep(Duration::from_secs(2)).await; // Wait before retrying
+                    }
+                    Err(e) => return Err(e),
+                }
+            } else {
+                let error_message = format!(
+                    "Failed to download model: {}",
+                    response.text().await.unwrap().red()
+                );
+                return Err(anyhow::anyhow!(error_message));
+            }
         }
 
-        Ok(())
+        Err(anyhow::anyhow!(
+            "Failed to download file after {} attempts",
+            max_attempts
+        ))
     }
 
     /// Parses stream response
@@ -227,7 +248,10 @@ mod tests {
     async fn test_list_files() {
         let mut download_server = mockito::Server::new_async().await;
         let url = download_server.url();
-        env::set_var("OPSML_TRACKING_URI", url);
+
+        unsafe {
+            env::set_var("OPSML_TRACKING_URI", url);
+        }
 
         // get files
         let files_path = "./src/api/test_utils/list_files.json";
@@ -255,7 +279,9 @@ mod tests {
     async fn test_download_file() {
         let mut download_server = mockito::Server::new_async().await;
         let url = download_server.url();
-        env::set_var("OPSML_TRACKING_URI", url);
+        unsafe {
+            env::set_var("OPSML_TRACKING_URI", url);
+        }
 
         // mock model
         let get_path = "/opsml/files/download?path=metadata.json";

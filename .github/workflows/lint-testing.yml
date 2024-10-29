@@ -36,7 +36,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu, macos, windows]
+        os: [ubuntu, macos]
 
     runs-on: ${{ matrix.os }}-latest
     steps:
@@ -61,8 +61,40 @@ jobs:
         env:
           RUST_BACKTRACE: 1
 
+  test-windows:
+    needs: [test-leaks]
+    name: test ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows]
+
+    runs-on: ${{ matrix.os }}-2019
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        run: rustup override set stable && rustup update
+
+      - name: Install clippy
+        run: rustup component add clippy
+
+      - name: cache rust
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.os }}-v1
+
+      - name: Run cargo tests
+        run: |
+          make format
+          make lints
+          make test.unit
+        env:
+          RUST_BACKTRACE: 1
+
   test-build:
-    needs: [test-os]
+    needs: [test-os, test-windows]
     name: build - ubuntu - ${{ matrix.target }}
     strategy:
       fail-fast: false
