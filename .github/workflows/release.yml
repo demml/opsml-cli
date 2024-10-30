@@ -292,7 +292,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [aarch64, armv7, ppc64le]
+        target: [aarch64]
         distro: [alpine_latest]
 
     steps:
