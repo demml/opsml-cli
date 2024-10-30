@@ -292,11 +292,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [aarch64, armv7, ppc64le]
-        distro: ["ubuntu22.04"]
         include:
           - target: aarch64
             distro: alpine_latest
+          - target: aarch64
+            distro: ubuntu_latest
+          - target: armv7
+            distro: ubuntu_latest
+          - target: ppc64le
+            distro: ubuntu_latest
 
     steps:
       - uses: actions/checkout@v4
