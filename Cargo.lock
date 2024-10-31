@@ -883,7 +883,7 @@ dependencies = [
 
 [[package]]
 name = "opsml-cli"
-version = "0.6.1"
+version = "0.4.4"
 dependencies = [
  "anyhow",
  "assert-json-diff",
