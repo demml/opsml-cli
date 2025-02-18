@@ -341,6 +341,7 @@ pub async fn download_model(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::api::types::PresignedUrl;
     use std::env;
     use std::fs;
     use tokio;
@@ -353,7 +354,7 @@ mod tests {
         let mut download_server = mockito::Server::new_async().await;
         let url = download_server.url();
         unsafe {
-            env::set_var("OPSML_TRACKING_URI", url);
+            env::set_var("OPSML_TRACKING_URI", url.clone());
         }
 
         // get files
@@ -384,29 +385,65 @@ mod tests {
             files: vec!["preprocessor.json".to_string()],
         };
         let preprocessor_file_response = serde_json::to_string(&preprocessor_files).unwrap();
-
         let _mock_list_path = download_server
             .mock("GET", artifact_preprocessor_path)
             .with_status(201)
             .with_body(&preprocessor_file_response)
             .create();
 
-        // mock model
-        let get_model_path = "/opsml/files/download?path=models.json";
-
-        let mock_model_path = download_server
-            .mock("GET", get_model_path)
+        // mock metadata download
+        // presigned 1
+        let get_presigned_path1 = "/opsml/files/presigned?path=metadata.json";
+        let mock_presigned_url1 = PresignedUrl {
+            url: format!("{}/get1", url.clone()),
+        };
+        let _mock_presigned_path1 = download_server
+            .mock("GET", get_presigned_path1)
             .with_status(201)
-            .with_body(&metadata)
+            .with_body(serde_json::to_string(&mock_presigned_url1).unwrap())
             .create();
 
-        // mock model
-        let get_preprocessor_path = "/opsml/files/download?path=preprocessor.json";
-
-        let mock_preprocessor_path = download_server
-            .mock("GET", get_preprocessor_path)
+        let _mock_download_path1 = download_server
+            .mock("GET", "/get1")
             .with_status(201)
-            .with_body(&metadata)
+            .with_body("test")
+            .create();
+
+        // mock model download
+        // presigned 2
+        let get_presigned_path2 = "/opsml/files/presigned?path=models.json";
+        let mock_presigned_url2 = PresignedUrl {
+            url: format!("{}/get2", url.clone()),
+        };
+
+        let _mock_presigned_path2 = download_server
+            .mock("GET", get_presigned_path2)
+            .with_status(201)
+            .with_body(serde_json::to_string(&mock_presigned_url2).unwrap())
+            .create();
+
+        let _mock_download_path2 = download_server
+            .mock("GET", "/get2")
+            .with_status(201)
+            .with_body("model")
+            .create();
+
+        // mock model download
+        // presigned 3
+        let get_presigned_path3 = "/opsml/files/presigned?path=preprocessor.json";
+        let mock_presigned_url3 = PresignedUrl {
+            url: format!("{}/get3", url.clone()),
+        };
+        let mock_preprocessor_path = download_server
+            .mock("GET", get_presigned_path3)
+            .with_status(201)
+            .with_body(serde_json::to_string(&mock_presigned_url3).unwrap())
+            .create();
+
+        let _mock_download_path3 = download_server
+            .mock("GET", "/get3")
+            .with_status(201)
+            .with_body("preprocessor")
             .create();
 
         let downloader = ModelDownloader {
@@ -438,8 +475,6 @@ mod tests {
             .download_files(Path::new("models"), Path::new(""))
             .await
             .unwrap();
-
-        mock_model_path.assert();
 
         downloader
             .get_preprocessor(&metadata, Path::new(""))

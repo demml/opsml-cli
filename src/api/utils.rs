@@ -33,7 +33,7 @@ lazy_static! {
 pub enum OpsmlPaths {
     ListCard,
     MetadataDownload,
-    Download,
+    DownloadPresigned,
     Metric,
     ListFile,
 }
@@ -45,13 +45,15 @@ impl OpsmlPaths {
             OpsmlPaths::MetadataDownload => {
                 format!("{}/opsml/models/metadata", *OPSML_TRACKING_URI)
             }
-            OpsmlPaths::Download => {
-                format!("{}/opsml/files/download", *OPSML_TRACKING_URI)
-            }
+
             OpsmlPaths::Metric => {
                 format!("{}/opsml/metrics", *OPSML_TRACKING_URI)
             }
             OpsmlPaths::ListFile => format!("{}/opsml/files/list", *OPSML_TRACKING_URI),
+
+            OpsmlPaths::DownloadPresigned => {
+                format!("{}/opsml/files/presigned", *OPSML_TRACKING_URI)
+            }
         }
     }
 }

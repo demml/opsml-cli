@@ -160,3 +160,8 @@ pub struct CompareMetricResponse {
     pub challenger_version: String,
     pub report: HashMap<String, Vec<BattleReport>>,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct PresignedUrl {
+    pub url: String,
+}
