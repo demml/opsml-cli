@@ -9,7 +9,7 @@ permissions:
 
 env:
   PACKAGE_NAME: opsml_cli
-  INTERPRETER: "3.8 3.9 3.10 3.11 pypy3.8 pypy3.9 pypy3.10"
+  INTERPRETER: "3.8 3.9 3.10 3.11 3.12 pypy3.8 pypy3.9 pypy3.10"
   RUSTFLAGS: -C debuginfo=0
 
 jobs:
@@ -216,7 +216,7 @@ jobs:
             interpreter: 3.8 3.9 3.10 3.11
           - target: x64
             python-architecture: x64
-            interpreter: 3.8 3.9 3.10 3.11 pypy3.8 pypy3.9 pypy3.10
+            interpreter: 3.8 3.9 3.10 3.11 3.12 pypy3.8 pypy3.9 pypy3.10
           - target: aarch64
             interpreter: 3.11
         exclude:

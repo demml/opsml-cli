@@ -2,15 +2,15 @@
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
 use crate::api::types;
+use crate::api::types::PresignedUrl;
 use crate::api::utils;
 use anyhow::Context;
 use futures_util::StreamExt;
 use owo_colors::OwoColorize;
 use reqwest::{self, Response};
 use serde::Serialize;
-use std::time::Duration;
 use std::{format, path::Path};
-use tokio::time::sleep;
+use tokio::io::AsyncWriteExt;
 
 pub struct RouteHelper {}
 
@@ -88,11 +88,16 @@ impl RouteHelper {
     /// # Returns
     /// * `Result<(), String>` - Result of file download
     ///
-    pub async fn download_stream_to_file(
-        response: Response,
+    pub async fn download_presigned_url_to_file(
+        presigned_url: PresignedUrl,
         filename: &Path,
     ) -> Result<(), anyhow::Error> {
-        let mut response_stream = response.bytes_stream();
+        let response = RouteHelper::make_get_request(&presigned_url.url, None)
+            .await
+            .with_context(|| format!("failed to download file for {:?}", filename))?;
+
+        let mut response_stream = response.bytes_stream().chunks(8192);
+
         let mut file = tokio::fs::File::create(filename).await.with_context(|| {
             format!(
                 "failed to create file for {:?}",
@@ -100,12 +105,14 @@ impl RouteHelper {
             )
         })?;
 
-        while let Some(item) = response_stream.next().await {
-            let chunk =
-                item.with_context(|| format!("failed to read response for {:?}", filename))?;
-            tokio::io::copy(&mut chunk.as_ref(), &mut file)
+        while let Some(chunk) = response_stream.next().await {
+            let chunk = chunk
+                .into_iter()
+                .collect::<Result<Vec<_>, _>>()
+                .with_context(|| format!("failed to read response for {:?}", filename))?;
+            file.write_all(&chunk.concat())
                 .await
-                .with_context(|| format!("failed to write response for {:?}", filename))?;
+                .with_context(|| format!("failed to write response to file {:?}", filename))?;
         }
         Ok(())
     }
@@ -123,31 +130,44 @@ impl RouteHelper {
     ///
     pub async fn download_file(lpath: &Path, rpath: &str) -> Result<(), anyhow::Error> {
         let params = [("path", rpath)];
-        let mut attempts = 0;
         let max_attempts = 3;
 
-        while attempts < max_attempts {
-            attempts += 1;
-            let response =
-                RouteHelper::make_get_request(&utils::OpsmlPaths::Download.as_str(), Some(&params))
-                    .await
-                    .with_context(|| "failed to download model")?;
+        for attempt in 1..=max_attempts {
+            let response = RouteHelper::make_get_request(
+                &utils::OpsmlPaths::DownloadPresigned.as_str(),
+                Some(&params),
+            )
+            .await
+            .with_context(|| format!("failed to download model on attempt {}", attempt))?;
 
             if response.status().is_success() {
-                match RouteHelper::download_stream_to_file(response, lpath).await {
-                    Ok(_) => return Ok(()),
-                    Err(e) if attempts < max_attempts => {
-                        println!("Attempt {} failed: {}. Retrying...", attempts, e);
-                        sleep(Duration::from_secs(2)).await; // Wait before retrying
-                    }
-                    Err(e) => return Err(e),
+                let presigned_uri: PresignedUrl = response.json().await.with_context(|| {
+                    format!(
+                        "failed to parse presigned url for {:?} on attempt {}",
+                        rpath.to_string().red(),
+                        attempt
+                    )
+                })?;
+
+                if let Err(e) =
+                    RouteHelper::download_presigned_url_to_file(presigned_uri, lpath).await
+                {
+                    eprintln!(
+                        "Attempt {}: failed to download file for {:?}: {}",
+                        attempt,
+                        lpath.to_str().unwrap().red(),
+                        e
+                    );
+                } else {
+                    return Ok(());
                 }
             } else {
                 let error_message = format!(
-                    "Failed to download model: {}",
+                    "Attempt {}: Failed to download model: {}",
+                    attempt,
                     response.text().await.unwrap().red()
                 );
-                return Err(anyhow::anyhow!(error_message));
+                eprintln!("{}", error_message);
             }
         }
 
@@ -280,16 +300,25 @@ mod tests {
         let mut download_server = mockito::Server::new_async().await;
         let url = download_server.url();
         unsafe {
-            env::set_var("OPSML_TRACKING_URI", url);
+            env::set_var("OPSML_TRACKING_URI", url.clone());
         }
 
         // mock model
-        let get_path = "/opsml/files/download?path=metadata.json";
+        let get_path = "/opsml/files/presigned?path=metadata.json";
+        let mock_presigned_url = PresignedUrl {
+            url: format!("{}/get", url),
+        };
 
-        let mock_download_path = download_server
+        let mock_presigned_path = download_server
             .mock("GET", get_path)
             .with_status(201)
-            .with_body("{'hello': 'world'}")
+            .with_body(serde_json::to_string(&mock_presigned_url).unwrap())
+            .create();
+
+        let mock_download_path = download_server
+            .mock("GET", "/get")
+            .with_status(201)
+            .with_body("test")
             .create();
 
         let uid = &Uuid::new_v4().to_string();
@@ -301,6 +330,7 @@ mod tests {
             .unwrap();
 
         mock_download_path.assert();
+        mock_presigned_path.assert();
 
         // check path exists
         assert!(lpath.exists());
