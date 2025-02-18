@@ -1,5 +1,3 @@
-setup.project:
-	poetry install --all-extras
 
 test.unit:
 	cargo test -- --test-threads=1
@@ -10,3 +8,6 @@ format:
 lints:
 	cargo clippy --workspace --all-targets -- -D warnings
 
+setup.project:
+	uv sync --all-extras --group dev
+	uv run maturin develop

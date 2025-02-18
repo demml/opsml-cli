@@ -1,4 +1,4 @@
-/// Copyright (c) Shipt, Inc.
+/// Copyright (c) Demml
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
 use crate::api::commands::{DownloadModelArgs, ListCards, ModelMetadataArgs, ModelMetricArgs};
@@ -9,7 +9,6 @@ use clap::Subcommand;
 
 #[derive(Parser)]
 #[command(about = "CLI tool for Interacting with an Opsml server")]
-
 pub struct Cli {
     #[command(subcommand)]
     pub command: Option<Commands>,
