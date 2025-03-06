@@ -304,7 +304,7 @@ mod tests {
         }
 
         // mock model
-        let get_path = "/opsml/files/presigned?path=metadata.json";
+        let get_path = "/opsml/files/presigned?path=metadata.json&method=GET";
         let mock_presigned_url = PresignedUrl {
             url: format!("{}/get", url),
         };

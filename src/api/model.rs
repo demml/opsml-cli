@@ -393,7 +393,7 @@ mod tests {
 
         // mock metadata download
         // presigned 1
-        let get_presigned_path1 = "/opsml/files/presigned?path=metadata.json";
+        let get_presigned_path1 = "/opsml/files/presigned?path=metadata.json&method=GET";
         let mock_presigned_url1 = PresignedUrl {
             url: format!("{}/get1", url.clone()),
         };
@@ -411,7 +411,7 @@ mod tests {
 
         // mock model download
         // presigned 2
-        let get_presigned_path2 = "/opsml/files/presigned?path=models.json";
+        let get_presigned_path2 = "/opsml/files/presigned?path=models.json&method=GET";
         let mock_presigned_url2 = PresignedUrl {
             url: format!("{}/get2", url.clone()),
         };
@@ -430,7 +430,7 @@ mod tests {
 
         // mock model download
         // presigned 3
-        let get_presigned_path3 = "/opsml/files/presigned?path=preprocessor.json";
+        let get_presigned_path3 = "/opsml/files/presigned?path=preprocessor.json&method=GET";
         let mock_presigned_url3 = PresignedUrl {
             url: format!("{}/get3", url.clone()),
         };
