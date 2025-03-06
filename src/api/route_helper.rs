@@ -129,7 +129,7 @@ impl RouteHelper {
     /// * `Result<(), String>` - Result of file download
     ///
     pub async fn download_file(lpath: &Path, rpath: &str) -> Result<(), anyhow::Error> {
-        let params = [("path", rpath)];
+        let params = [("path", rpath), ("method", "GET")];
         let max_attempts = 3;
 
         for attempt in 1..=max_attempts {
