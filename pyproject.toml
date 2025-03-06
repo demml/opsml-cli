@@ -1,7 +1,7 @@
 [project]
 name = "opsml-cli"
 requires-python = ">=3.10"
-version = "0.7.0"
+version = "0.7.1"
 description = "Rust-based CLI for interacting with OpsML"
 readme = "README.md"
 authors = [{ name = 'Steven Forrester', email = 'sjforrester32@gmail.com' }]
